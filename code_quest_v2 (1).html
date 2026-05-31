@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Code Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IBM+Plex+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07050f;
+  --s1:#0f0b1e;
+  --s2:#160f2e;
+  --s3:#1c1240;
+  --p:#c4b5fd;
+  --p2:#a78bfa;
+  --p3:#7c3aed;
+  --p-glow:rgba(167,139,250,0.35);
+  --t:#5eead4;
+  --t2:#2dd4bf;
+  --t-glow:rgba(94,234,212,0.25);
+  --gold:#fde68a;
+  --gold2:#f59e0b;
+  --text:#ede9fe;
+  --muted:#8b7fb8;
+  --dim:#4c4573;
+  --green:#86efac;
+  --green-bg:rgba(74,222,128,0.08);
+  --green-border:rgba(74,222,128,0.3);
+  --red:#fca5a5;
+  --red-bg:rgba(248,113,113,0.08);
+  --red-border:rgba(248,113,113,0.3);
+  --r:12px;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Canvas bg ── */
+#stars-canvas{
+  position:fixed;inset:0;
+  pointer-events:none;z-index:0;
+  opacity:0.6;
+}
+
+/* ── Ambient orbs ── */
+.orb{
+  position:fixed;border-radius:50%;
+  filter:blur(80px);pointer-events:none;z-index:0;
+  animation:orb-drift 12s ease-in-out infinite alternate;
+}
+.orb1{width:500px;height:500px;top:-150px;left:-100px;background:rgba(109,40,217,0.18);animation-delay:0s}
+.orb2{width:400px;height:400px;bottom:-100px;right:-80px;background:rgba(20,184,166,0.12);animation-delay:-4s}
+.orb3{width:300px;height:300px;top:40%;left:60%;background:rgba(124,58,237,0.1);animation-delay:-8s}
+
+@keyframes orb-drift{
+  from{transform:translate(0,0) scale(1)}
+  to{transform:translate(30px,20px) scale(1.08)}
+}
+
+/* ── Layout ── */
+#app{
+  position:relative;z-index:1;
+  max-width:700px;margin:0 auto;
+  padding:2.5rem 1.25rem 5rem;
+}
+
+/* ── Title screen ── */
+#title-screen{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;gap:0;
+  animation:fadeIn 1s ease both;
+}
+
+.title-rune{
+  font-size:3.5rem;margin-bottom:1.5rem;
+  filter:drop-shadow(0 0 20px var(--p-glow));
+  animation:pulse-rune 3s ease-in-out infinite;
+}
+@keyframes pulse-rune{
+  0%,100%{filter:drop-shadow(0 0 20px var(--p-glow))}
+  50%{filter:drop-shadow(0 0 40px rgba(167,139,250,0.6))}
+}
+
+.main-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(2.2rem,6vw,4rem);
+  font-weight:700;
+  letter-spacing:0.08em;
+  line-height:1.1;
+  background:linear-gradient(135deg,#e0d7ff 0%,var(--p) 40%,var(--t) 80%,#a7f3d0 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:1rem;
+  filter:drop-shadow(0 0 30px var(--p-glow));
+}
+.main-sub{
+  font-family:'Crimson Pro',serif;
+  font-size:1.15rem;
+  color:var(--muted);
+  font-style:italic;
+  margin-bottom:3rem;
+  line-height:1.6;
+}
+
+/* decorative line */
+.deco-line{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:2.5rem;width:100%;max-width:340px;
+}
+.deco-line::before,.deco-line::after{
+  content:'';flex:1;height:0.5px;
+  background:linear-gradient(90deg,transparent,var(--p-glow),transparent);
+}
+.deco-diamond{color:var(--p);font-size:10px;letter-spacing:6px;opacity:0.6}
+
+.chapters-preview{
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;margin-bottom:2.5rem;max-width:500px;
+}
+.ch-tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.06em;
+  color:var(--t);
+  background:rgba(94,234,212,0.07);
+  border:0.5px solid rgba(94,234,212,0.2);
+  border-radius:99px;padding:4px 12px;
+}
+
+.start-btn{
+  font-family:'Cinzel',serif;
+  font-size:15px;font-weight:600;letter-spacing:0.12em;
+  color:var(--bg);
+  background:linear-gradient(135deg,var(--p) 0%,var(--t) 100%);
+  border:none;border-radius:99px;
+  padding:1rem 3rem;cursor:pointer;
+  position:relative;overflow:hidden;
+  box-shadow:0 0 30px var(--p-glow),0 0 60px rgba(94,234,212,0.1);
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.start-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+}
+.start-btn:hover{
+  transform:scale(1.04);
+  box-shadow:0 0 50px var(--p-glow),0 0 80px rgba(94,234,212,0.2);
+}
+
+/* ── Game screen ── */
+#game-screen{display:none}
+#game-screen.visible{display:block;animation:fadeIn 0.5s ease both}
+
+/* ── Progress ── */
+.progress-wrap{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:1.75rem;
+}
+.progress-track{
+  flex:1;height:2px;
+  background:rgba(255,255,255,0.05);
+  border-radius:99px;overflow:hidden;
+  position:relative;
+}
+.progress-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--p3),var(--p),var(--t));
+  transition:width 0.6s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 8px var(--p-glow);
+}
+.progress-info{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--dim);white-space:nowrap;
+}
+
+/* ── Chapter card ── */
+.chapter-card{
+  background:linear-gradient(145deg,var(--s1) 0%,var(--s2) 100%);
+  border:0.5px solid rgba(196,181,253,0.15);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.5),
+             0 20px 60px rgba(0,0,0,0.6),
+             inset 0 1px 0 rgba(255,255,255,0.04);
+  animation:cardIn 0.5s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(16px) scale(0.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* card top bar */
+.card-top{
+  padding:1rem 1.5rem;
+  background:linear-gradient(90deg,rgba(109,40,217,0.15),rgba(20,184,166,0.08));
+  border-bottom:0.5px solid rgba(196,181,253,0.1);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;
+}
+.world-name{
+  font-family:'Cinzel',serif;
+  font-size:11px;font-weight:600;letter-spacing:0.1em;
+  color:var(--p);
+  text-shadow:0 0 12px var(--p-glow);
+}
+.concept-chip{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.05em;
+  color:var(--t);
+  background:rgba(94,234,212,0.08);
+  border:0.5px solid rgba(94,234,212,0.25);
+  border-radius:99px;padding:3px 12px;
+}
+
+.card-body{padding:1.75rem 1.5rem}
+
+/* story */
+.story{
+  font-size:16px;line-height:1.85;
+  color:rgba(237,233,254,0.9);
+  margin-bottom:1.5rem;
+  position:relative;padding-left:1rem;
+  border-left:2px solid rgba(167,139,250,0.2);
+}
+.story em{color:var(--gold);font-style:italic}
+.story strong{color:var(--p)}
+
+/* code */
+.code-wrap{
+  margin-bottom:1.75rem;
+  border-radius:10px;overflow:hidden;
+  border:0.5px solid rgba(196,181,253,0.12);
+  box-shadow:inset 0 0 40px rgba(0,0,0,0.4);
+}
+.code-topbar{
+  background:rgba(0,0,0,0.4);
+  padding:8px 14px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:0.5px solid rgba(255,255,255,0.04);
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot1{background:#ff5f57}.dot2{background:#febc2e}.dot3{background:#28c840}
+.code-file{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--dim);
+  margin-left:auto;
+}
+.code-inner{
+  background:#060410;
+  padding:1.25rem 1.25rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;line-height:1.8;
+  color:#c4b5fd;
+  white-space:pre-wrap;word-break:break-word;
+}
+.ck{color:var(--t);font-weight:500}
+.cs{color:var(--gold)}
+.cn{color:#f9a8d4}
+.cc{color:var(--dim);font-style:italic}
+
+/* choices */
+.choose-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:10px;
+}
+.choices{display:flex;flex-direction:column;gap:8px}
+
+.choice{
+  background:rgba(255,255,255,0.02);
+  border:0.5px solid rgba(196,181,253,0.1);
+  border-radius:10px;
+  padding:0.9rem 1.1rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;line-height:1.7;
+  color:var(--muted);
+  cursor:pointer;text-align:left;
+  white-space:pre-wrap;word-break:break-word;
+  transition:all 0.18s ease;
+  position:relative;overflow:hidden;
+}
+.choice::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(167,139,250,0.06),transparent);
+  opacity:0;transition:opacity 0.18s;
+}
+.choice:hover:not(:disabled)::before{opacity:1}
+.choice:hover:not(:disabled){
+  border-color:rgba(196,181,253,0.3);
+  color:var(--text);
+  transform:translateX(3px);
+  box-shadow:inset 3px 0 0 var(--p3);
+}
+.choice:disabled{cursor:default}
+.choice.correct{
+  border-color:var(--green-border);
+  background:var(--green-bg);
+  color:var(--green);
+  box-shadow:0 0 20px rgba(74,222,128,0.1),inset 3px 0 0 var(--green);
+}
+.choice.wrong{
+  border-color:var(--red-border);
+  background:var(--red-bg);
+  color:var(--red);
+  box-shadow:inset 3px 0 0 var(--red);
+}
+
+/* feedback */
+.feedback{
+  margin-top:1.25rem;
+  border-radius:10px;
+  padding:1.1rem 1.25rem;
+  font-size:15px;line-height:1.8;
+  animation:fadeIn 0.4s ease both;
+}
+.feedback.correct{
+  background:var(--green-bg);
+  border:0.5px solid var(--green-border);
+  color:#bbf7d0;
+}
+.feedback.wrong{
+  background:var(--red-bg);
+  border:0.5px solid var(--red-border);
+  color:#fecaca;
+}
+.fb-head{
+  font-family:'Cinzel',serif;
+  font-size:12px;letter-spacing:0.1em;
+  margin-bottom:6px;opacity:0.7;
+}
+
+/* next */
+.next-row{margin-top:1.25rem;display:flex;justify-content:flex-end}
+.next-btn{
+  font-family:'Cinzel',serif;
+  font-size:12px;font-weight:600;letter-spacing:0.1em;
+  color:var(--text);
+  background:transparent;
+  border:0.5px solid rgba(196,181,253,0.3);
+  border-radius:99px;
+  padding:0.65rem 1.75rem;cursor:pointer;
+  transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.next-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(94,234,212,0.05));
+  opacity:0;transition:opacity 0.2s;
+}
+.next-btn:hover{
+  border-color:var(--p);color:var(--p);
+  box-shadow:0 0 20px var(--p-glow);
+}
+.next-btn:hover::before{opacity:1}
+
+/* ── Win screen ── */
+#win-screen{
+  display:none;text-align:center;
+  padding:3rem 1.5rem;
+  animation:fadeIn 0.7s ease both;
+}
+#win-screen.visible{display:block}
+
+.win-glyph{
+  font-size:5rem;margin-bottom:1.5rem;display:block;
+  filter:drop-shadow(0 0 30px rgba(253,230,138,0.6));
+  animation:win-pulse 2s ease-in-out infinite;
+}
+@keyframes win-pulse{
+  0%,100%{transform:scale(1) rotate(-2deg)}
+  50%{transform:scale(1.08) rotate(2deg)}
+}
+.win-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.6rem,4vw,2.4rem);
+  font-weight:700;
+  background:linear-gradient(135deg,var(--gold),var(--p),var(--t));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:0.75rem;
+  filter:drop-shadow(0 0 20px rgba(253,230,138,0.3));
+}
+.win-sub{
+  font-size:16px;color:var(--muted);font-style:italic;
+  line-height:1.7;margin-bottom:2.5rem;
+}
+
+.score-ring-wrap{
+  display:inline-flex;align-items:center;justify-content:center;
+  position:relative;margin-bottom:0.5rem;
+}
+.score-ring-wrap svg{transform:rotate(-90deg)}
+.score-center{
+  position:absolute;
+  font-family:'Cinzel',serif;
+  font-size:1.8rem;font-weight:600;
+  color:var(--p);
+}
+
+.win-divider{
+  display:flex;align-items:center;gap:10px;
+  margin:2rem auto;max-width:300px;
+}
+.win-divider::before,.win-divider::after{
+  content:'';flex:1;height:0.5px;
+  background:linear-gradient(90deg,transparent,rgba(196,181,253,0.2),transparent);
+}
+.win-divider span{font-size:10px;color:var(--dim);letter-spacing:0.12em;font-family:'IBM Plex Mono',monospace}
+
+.concepts-row{
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;margin-bottom:2.5rem;
+}
+.ctag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.05em;
+  color:var(--p);
+  background:rgba(167,139,250,0.08);
+  border:0.5px solid rgba(167,139,250,0.2);
+  border-radius:99px;padding:5px 14px;
+}
+
+.replay-btn{
+  font-family:'Cinzel',serif;
+  font-size:13px;font-weight:600;letter-spacing:0.12em;
+  color:var(--bg);
+  background:linear-gradient(135deg,var(--gold2),var(--p),var(--t));
+  border:none;border-radius:99px;
+  padding:1rem 2.5rem;cursor:pointer;
+  box-shadow:0 0 40px rgba(253,230,138,0.2),0 0 80px var(--p-glow);
+  transition:transform 0.2s,box-shadow 0.2s;
+  position:relative;overflow:hidden;
+}
+.replay-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+}
+.replay-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 60px rgba(253,230,138,0.3),0 0 100px var(--p-glow);
+}
+
+/* ── Animations ── */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:99px}
+
+/* ── Mobile ── */
+@media(max-width:480px){
+  .card-body{padding:1.25rem 1rem}
+  .card-top{padding:0.75rem 1rem}
+  .main-title{font-size:2rem}
+  .story{padding-left:0.75rem}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div id="app">
+
+  <!-- Title Screen -->
+  <div id="title-screen">
+    <div class="title-rune">⟡</div>
+    <div class="main-title">Code Quest</div>
+    <p class="main-sub">Master the ancient spells of programming<br>and save the kingdom of Logicland</p>
+    <div class="deco-line"><span class="deco-diamond">◆ ◆ ◆</span></div>
+    <div class="chapters-preview">
+      <span class="ch-tag">Variables</span>
+      <span class="ch-tag">Conditionals</span>
+      <span class="ch-tag">Loops</span>
+      <span class="ch-tag">Functions</span>
+      <span class="ch-tag">Lists</span>
+    </div>
+    <button class="start-btn" onclick="startGame()">Begin Your Quest</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen">
+    <div id="game-inner"></div>
+  </div>
+
+  <!-- Win Screen -->
+  <div id="win-screen">
+    <span class="win-glyph">✦</span>
+    <div class="win-title">Quest Complete</div>
+    <p class="win-sub">You have mastered the ancient spells of Logicland<br>and lifted the curse from the kingdom.</p>
+    <div class="score-ring-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+        <circle id="score-arc" cx="60" cy="60" r="50" fill="none"
+          stroke="url(#arcGrad)" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="314" stroke-dashoffset="314"
+          style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1) 0.3s"/>
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="100%" stop-color="#5eead4"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="score-center" id="score-text"></span>
+    </div>
+    <div class="win-divider"><span>SPELLS MASTERED</span></div>
+    <div class="concepts-row" id="win-concepts"></div>
+    <button class="replay-btn" onclick="restart()">Play Again</button>
+  </div>
+
+</div>
+
+<script>
+/* ── Stars ── */
+const canvas = document.getElementById('stars-canvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function initStars() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = Array.from({length:180}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.2 + 0.2,
+    a: Math.random(),
+    speed: Math.random() * 0.004 + 0.002,
+    phase: Math.random() * Math.PI * 2
+  }));
+}
+function drawStars(t) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    const alpha = s.a * (0.4 + 0.6 * Math.sin(t * s.speed + s.phase));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,190,255,${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+initStars();
+requestAnimationFrame(drawStars);
+window.addEventListener('resize', initStars);
+
+/* ── Game Data ── */
+const quests = [
+  {
+    world: "The Village of Variables",
+    concept: "Variables & Data Types",
+    story: `You arrive at Logicland, a kingdom where spells are written in code. The wise Elder Bita greets you:\n\n<em>"To open the gates of the castle, you must store the magic word in a variable. Which spell is correct?"</em>`,
+    code: `# Store the word "open" to unlock the gate`,
+    choices: [
+      { text: 'magic_word = "open"', correct: true },
+      { text: '"open" = magic_word', correct: false },
+      { text: 'open == magic_word', correct: false },
+      { text: 'var "open" magic_word', correct: false },
+    ],
+    feedback: {
+      correct: "The gates swing open! Variables are like labeled boxes — the name comes first (magic_word), then = to assign, then the value (\"open\"). Quotes mark it as a string — text data.",
+      wrong: "The gates stay shut. Assignment goes left-to-right: variable name first, then =, then the value. The correct spell was: magic_word = \"open\""
+    }
+  },
+  {
+    world: "The Forest of If",
+    concept: "Conditionals (if / else)",
+    story: `Deep in the Whispering Forest, a troll blocks the bridge.\n\n<em>"I only let travellers cross if they carry a lantern,"</em> he growls. Your bag has one. Which spell makes him step aside?`,
+    code: `has_lantern = True\n\n# Write the spell to check the condition:`,
+    choices: [
+      { text: 'if has_lantern:\n    troll.step_aside()', correct: true },
+      { text: 'when has_lantern:\n    troll.step_aside()', correct: false },
+      { text: 'if (has_lantern = True)\n    troll.step_aside()', correct: false },
+      { text: 'check has_lantern then\n    troll.step_aside()', correct: false },
+    ],
+    feedback: {
+      correct: "The troll grumbles and steps aside! An if block checks a condition — if True, the indented code runs. No need to write == True on a boolean; just use it directly.",
+      wrong: "The troll crosses his arms. Use 'if', not 'when' or 'check'. A single = means assignment — to compare, use == or just use the boolean directly: if has_lantern:"
+    }
+  },
+  {
+    world: "The Loop Mines",
+    concept: "Loops (for)",
+    story: `The Crystal Mines hide a door with 5 locks. You must whisper "unlock" exactly 5 times.\n\n<em>"Use a loop, young coder!"</em> your mentor urges. Which spell opens all 5 locks?`,
+    code: `locks = 5\n\n# Whisper "unlock" exactly 5 times:`,
+    choices: [
+      { text: 'for i in range(5):\n    whisper("unlock")', correct: true },
+      { text: 'repeat 5:\n    whisper("unlock")', correct: false },
+      { text: 'for i in 5:\n    whisper("unlock")', correct: false },
+      { text: 'loop(5) whisper("unlock")', correct: false },
+    ],
+    feedback: {
+      correct: "All 5 locks click open! range(5) yields 0,1,2,3,4 — five values. The for loop runs once per value, so the body repeats 5 times. Loops prevent you from writing the same line over and over.",
+      wrong: "The locks stay sealed. Python for loops need range(): for i in range(5). 'repeat' and 'loop()' aren't valid Python — and 'for i in 5' won't work because 5 is not iterable."
+    }
+  },
+  {
+    world: "The Tower of Functions",
+    concept: "Functions (def)",
+    story: `You reach the Dragon's Tower. A wizard leans close:\n\n<em>"Each door needs the same potion. Instead of re-writing the recipe every time — wrap it in a function!"</em> Which spell is correct?`,
+    code: `# Define a reusable potion spell:`,
+    choices: [
+      { text: 'def brew(ingredient1, ingredient2):\n    return mix(ingredient1, ingredient2)', correct: true },
+      { text: 'function brew(ingredient1, ingredient2):\n    return mix(ingredient1, ingredient2)', correct: false },
+      { text: 'def brew:\n    mix(ingredient1, ingredient2)', correct: false },
+      { text: 'brew = function(ingredient1, ingredient2)\n    mix()', correct: false },
+    ],
+    feedback: {
+      correct: "The dragon's doors fly open! 'def' defines a function in Python, followed by its name and parameters in parentheses. 'return' sends the result back to the caller.",
+      wrong: "The potion fizzles. Python uses 'def' — not 'function' (that's JavaScript). Parameters go in the parentheses on the def line, and 'return' hands back the result."
+    }
+  },
+  {
+    world: "The Castle of Lists",
+    concept: "Lists & Indexing",
+    story: `In the grand Castle library, the archivist points to a shelf of five scrolls.\n\n<em>"Bring me the third one. And remember — counting starts at zero in the land of code!"</em>`,
+    code: `scrolls = ["fire", "water", "earth", "wind", "light"]\n\n# Get the third scroll ("earth"):`,
+    choices: [
+      { text: 'scrolls[2]', correct: true },
+      { text: 'scrolls[3]', correct: false },
+      { text: 'scrolls.get(3)', correct: false },
+      { text: 'scrolls(2)', correct: false },
+    ],
+    feedback: {
+      correct: '"Earth — exactly right!" the archivist beams. Lists use zero-based indexing: index 0 = "fire", 1 = "water", 2 = "earth". The third item lives at index 2, not 3.',
+      wrong: '"Not quite." Lists count from 0, so index 3 gives "wind" (the 4th item). Use square brackets [] to access items (parentheses call functions), and remember: third item = index 2.'
+    }
+  }
+];
+
+let current = 0, score = 0, answered = false;
+
+function hl(code) {
+  return code
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(#[^\n]*)/g, '<span class="cc">$1</span>')
+    .replace(/\b(for|in|if|def|return|True|False|None|and|or|not|while|else|elif|import|from|as|class|pass|break|continue|lambda|yield|with|try|except|finally|raise|del|global|nonlocal|assert)\b/g, '<span class="ck">$1</span>')
+    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="cs">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span class="cn">$1</span>');
+}
+
+function startGame() {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('game-screen').classList.add('visible');
+  render();
+}
+
+function render() {
+  const el = document.getElementById('game-inner');
+  const q = quests[current];
+  const pct = Math.round((current / quests.length) * 100);
+
+  el.innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+      <span class="progress-info">ch ${current+1} / ${quests.length} &nbsp;·&nbsp; ${score} pts</span>
+    </div>
+
+    <div class="chapter-card">
+      <div class="card-top">
+        <span class="world-name">${q.world}</span>
+        <span class="concept-chip">${q.concept}</span>
+      </div>
+      <div class="card-body">
+        <p class="story">${q.story.replace(/\n/g,'<br>')}</p>
+
+        <div class="code-wrap">
+          <div class="code-topbar">
+            <div class="dot dot1"></div><div class="dot dot2"></div><div class="dot dot3"></div>
+            <span class="code-file">spell.py</span>
+          </div>
+          <div class="code-inner">${hl(q.code)}</div>
+        </div>
+
+        <div class="choose-label">— choose your spell —</div>
+        <div class="choices" id="choices">
+          ${q.choices.map((c,i) => `<button class="choice" onclick="choose(${i})">${hl(c.text)}</button>`).join('')}
+        </div>
+        <div id="feedback-slot"></div>
+        <div id="next-slot"></div>
+      </div>
+    </div>`;
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  const q = quests[current];
+  const btns = document.querySelectorAll('.choice');
+  btns.forEach(b => b.disabled = true);
+  const ok = q.choices[i].correct;
+  btns[i].classList.add(ok ? 'correct' : 'wrong');
+  if (!ok) q.choices.forEach((c,j) => { if (c.correct) btns[j].classList.add('correct'); });
+  else score++;
+
+  document.getElementById('feedback-slot').innerHTML = `
+    <div class="feedback ${ok?'correct':'wrong'}">
+      <div class="fb-head">${ok ? '✦ CORRECT' : '✗ NOT QUITE'}</div>
+      ${ok ? q.feedback.correct : q.feedback.wrong}
+    </div>`;
+
+  document.getElementById('next-slot').innerHTML = `
+    <div class="next-row">
+      <button class="next-btn" onclick="advance()">
+        ${current < quests.length-1 ? 'Continue Quest →' : 'Complete Quest →'}
+      </button>
+    </div>`;
+}
+
+function advance() {
+  current++;
+  answered = false;
+  if (current >= quests.length) {
+    showWin();
+  } else {
+    render();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+function showWin() {
+  document.getElementById('game-screen').classList.remove('visible');
+  document.getElementById('game-screen').style.display = 'none';
+  const ws = document.getElementById('win-screen');
+  ws.classList.add('visible');
+
+  document.getElementById('score-text').textContent = `${score}/${quests.length}`;
+  document.getElementById('win-concepts').innerHTML =
+    quests.map(q => `<span class="ctag">${q.concept}</span>`).join('');
+
+  const arc = document.getElementById('score-arc');
+  const pct = score / quests.length;
+  const circ = 2 * Math.PI * 50;
+  setTimeout(() => {
+    arc.style.strokeDashoffset = circ * (1 - pct);
+  }, 100);
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restart() {
+  current = 0; score = 0; answered = false;
+  document.getElementById('win-screen').classList.remove('visible');
+  document.getElementById('win-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  document.getElementById('game-screen').classList.add('visible');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
